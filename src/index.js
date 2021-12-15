@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const { v4: uuidv4, validate } = require('uuid');
+const { json } = require('express/lib/response');
 
 const app = express();
 app.use(express.json());
@@ -10,19 +11,94 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  
+  const { username } = request.headers
+  const verifyExistsUserAccount = users
+  .find((customer) => customer.username === username)
+
+  if(!verifyExistsUserAccount){
+    const errorMessage = "The Username not found"
+    return response
+    .status(404)
+    .json({error: `${errorMessage}`})
+  }
+
+  request.user = verifyExistsUserAccount
+
+  return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  
+  const { user } = request;
+
+  if(user.pro === false &&
+    user.todo.length === 10){
+
+      const errorTodo = "To proceed and register more Tasks, purchase the Pro plan"
+
+      return response
+      .status(403)
+      .json({error: `${errorTodo}`})
+    }
+
+    if(user.pro === true){
+
+      const sucess = "You have the Pro plan, now let's get down to business"
+
+      return response
+      .status(201)
+      .json({message: `${sucess}`})
+
+    }
+    next();
+  
+    
+
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const userAlreadyExists = users.some((userInfo) => userInfo.username === username)
+
+  const idTodoAlreadyExists = users.todo.findIndex((idTodo) => idTodo.id === id)
+
+  if(!idTodoAlreadyExists){
+
+    const error = "Id not founded"
+    return response
+    .status(404)
+    .json({error: `${error}`})
+  }
+
+  if(!userAlreadyExists){
+
+    return response
+    .status(404)
+    .json({error: "Username not founded"})
+  }
+
+
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  
+  const { id } = request.params;
+  const verifyUserIdAlreadyExists = users.id.find((userId) => userId.id === id)
+
+  if(!verifyUserIdAlreadyExists){
+
+    const errorUserId = "User id not founded"
+    return response
+    .status(404)
+    .json({error: errorUserId})
+  }
+
+  request.user = verifyUserIdAlreadyExists;
+  return next();
 }
 
 app.post('/users', (request, response) => {
